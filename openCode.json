@@ -10,7 +10,7 @@
         "apiKey": "ollama"
       },
       "models": {
-        "qwen2.5-coder:1.5b-16k": {
+        "qwen2.5-coder:1.5b": {
           "name": "Qwen2.5 Coder",
           "tool_call": true,
           "limit": {

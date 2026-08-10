@@ -4,13 +4,13 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { SlideOver } from "@/components/ui/slide-over";
 import { Button } from "@/components/ui/button";
-import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
+import type { TaskInput, TaskPriority, TaskStatus } from "@/lib/types";
 import { TASK_PRIORITY_LABEL, TASK_STATUS_LABEL } from "@/lib/types";
 
 export interface TaskFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (task: Task) => void;
+  onSubmit: (input: TaskInput) => void;
 }
 
 interface TaskFormErrors {
@@ -56,12 +56,10 @@ export function TaskForm({ open, onClose, onSubmit }: TaskFormProps) {
       return;
     }
     onSubmit({
-      id: crypto.randomUUID(),
       title: title.trim(),
       status,
       priority,
-      dueDate,
-      isDeleted: false,
+      due_date: new Date(`${dueDate}T00:00:00Z`).toISOString(),
     });
   };
 

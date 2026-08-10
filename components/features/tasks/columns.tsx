@@ -32,22 +32,26 @@ const PRIORITY_TONES: Record<TaskPriority, BadgeTone> = {
   high: "rose",
 };
 
-function formatDueDate(iso: string): string {
+function formatDueDate(iso: string | null): string {
+  if (!iso) {
+    return "—";
+  }
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(`${iso}T00:00:00`));
+  }).format(new Date(iso));
 }
 
 function isPastDue(task: Task): boolean {
-  if (task.status === "completed") {
+  if (task.status === "completed" || !task.due_date) {
     return false;
   }
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const due = new Date(`${task.dueDate}T00:00:00`);
-  return due < today;
+  const due = new Date(task.due_date);
+  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  return dueDay < today;
 }
 
 function TaskTitle({ task }: { task: Task }) {
@@ -72,7 +76,7 @@ function TaskDueDate({ task }: { task: Task }) {
         overdue ? "font-medium text-rose-400" : "text-zinc-400"
       }`}
     >
-      {formatDueDate(task.dueDate)}
+      {formatDueDate(task.due_date)}
       {overdue && (
         <span className="ml-1.5 font-normal text-rose-500/80">overdue</span>
       )}
@@ -117,7 +121,7 @@ export function createTaskColumns(
     {
       id: "dueDate",
       header: "Due date",
-      accessor: (row) => row.dueDate,
+      accessor: (row) => row.due_date ?? "",
       sortable: true,
       cell: (task) => <TaskDueDate task={task} />,
     },

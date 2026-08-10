@@ -1,24 +1,35 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { AppLogo } from "@/components/ui/AppLogo";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { SkeletonTable } from "@/components/ui/skeleton-table";
 import { toast } from "@/components/ui/toast";
 import { FilterBar } from "./filter-bar";
 import { createTaskColumns } from "./columns";
 import { TaskForm } from "./task-form";
 import { TaskEditPanel } from "./task-edit-panel";
 import { TaskDeleteDialog } from "./task-delete-dialog";
-import { taskStore, useTasks } from "@/lib/task-store";
-import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
+import { useTasks } from "@/lib/tasks/use-tasks";
+import type { Task, TaskInput, TaskPriority, TaskStatus } from "@/lib/types";
 
 type ViewMode = "active" | "trash";
 
 export function TaskBoard() {
-  const tasks = useTasks();
+  const {
+    tasks,
+    status,
+    error,
+    retry,
+    createTask,
+    updateTask,
+    softDeleteTask,
+    restoreTask,
+    permanentlyDeleteTask,
+  } = useTasks();
 
   const [view, setView] = useState<ViewMode>("active");
   const [formOpen, setFormOpen] = useState(false);
@@ -36,11 +47,11 @@ export function TaskBoard() {
   }, [query]);
 
   const activeTasks = useMemo(
-    () => tasks.filter((task) => !task.isDeleted),
+    () => tasks.filter((task) => !task.is_deleted),
     [tasks]
   );
   const trashedTasks = useMemo(
-    () => tasks.filter((task) => task.isDeleted),
+    () => tasks.filter((task) => task.is_deleted),
     [tasks]
   );
   const baseTasks = view === "trash" ? trashedTasks : activeTasks;
@@ -67,38 +78,59 @@ export function TaskBoard() {
   const hasActiveFilters =
     query.trim().length > 0 || priorities.size > 0 || statuses.size > 0;
 
-  const handleMoveToTrash = useCallback((task: Task) => {
-    taskStore.moveToTrash(task.id);
-    toast.success("Task moved to recycling bin.", {
-      action: {
-        label: "Undo",
-        onSelect: () => taskStore.restore(task.id),
-      },
-    });
-  }, []);
+  const handleMoveToTrash = useCallback(
+    (task: Task) => {
+      void softDeleteTask(task.id);
+      toast.success("Task moved to recycling bin.", {
+        action: {
+          label: "Undo",
+          onSelect: () => void restoreTask(task.id),
+        },
+      });
+    },
+    [softDeleteTask, restoreTask]
+  );
 
-  const handleRestore = useCallback((task: Task) => {
-    taskStore.restore(task.id);
-    toast.success("Task restored to active list.");
-  }, []);
+  const handleRestore = useCallback(
+    (task: Task) => {
+      void restoreTask(task.id);
+      toast.success("Task restored to active list.");
+    },
+    [restoreTask]
+  );
 
-  const handleCreate = useCallback((task: Task) => {
-    taskStore.add(task);
-    setFormOpen(false);
-    toast.success("Task created successfully.");
-  }, []);
+  const handleCreate = useCallback(
+    async (input: TaskInput) => {
+      if (await createTask(input)) {
+        setFormOpen(false);
+        toast.success("Task created successfully.");
+      }
+    },
+    [createTask]
+  );
 
-  const handleSaveEdit = useCallback((task: Task) => {
-    taskStore.updateTask(task);
-    setEditingTask(null);
-    toast.success("Task updated.");
-  }, []);
+  const handleSaveEdit = useCallback(
+    async (input: TaskInput) => {
+      if (!editingTask) {
+        return;
+      }
+      if (await updateTask(editingTask.id, input)) {
+        setEditingTask(null);
+        toast.success("Task updated.");
+      }
+    },
+    [editingTask, updateTask]
+  );
 
-  const handleDeletePermanently = useCallback((task: Task) => {
-    taskStore.removePermanently(task.id);
-    setDeletingTask(null);
-    toast.success("Task permanently deleted.");
-  }, []);
+  const handleDeletePermanently = useCallback(
+    async (task: Task) => {
+      if (await permanentlyDeleteTask(task.id)) {
+        setDeletingTask(null);
+        toast.success("Task permanently deleted.");
+      }
+    },
+    [permanentlyDeleteTask]
+  );
 
   const togglePriority = useCallback((priority: TaskPriority) => {
     setPriorities((current) => {
@@ -148,6 +180,20 @@ export function TaskBoard() {
     [view, handleMoveToTrash, handleRestore]
   );
 
+  const renderSummary = () => {
+    if (status === "loading") {
+      return "Loading tasks…";
+    }
+    return view === "active"
+      ? `${completedCount} of ${activeTasks.length} completed`
+      : `${trashedTasks.length} ${
+          trashedTasks.length === 1 ? "task" : "tasks"
+        } in recycling bin`;
+  };
+
+  const renderCount = (count: number) =>
+    status === "loading" ? "…" : `(${count})`;
+
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-12">
       <div className="mb-10 flex items-center gap-2.5">
@@ -166,13 +212,7 @@ export function TaskBoard() {
             <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-100">
               Tasks
             </h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              {view === "active"
-                ? `${completedCount} of ${activeTasks.length} completed`
-                : `${trashedTasks.length} ${
-                    trashedTasks.length === 1 ? "task" : "tasks"
-                  } in recycling bin`}
-            </p>
+            <p className="mt-1 text-sm text-zinc-500">{renderSummary()}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -187,7 +227,7 @@ export function TaskBoard() {
                     <>
                       Tasks
                       <span className="ml-1.5 tabular-nums text-zinc-500">
-                        ({activeTasks.length})
+                        {renderCount(activeTasks.length)}
                       </span>
                     </>
                   ),
@@ -198,7 +238,7 @@ export function TaskBoard() {
                     <>
                       Trash
                       <span className="ml-1.5 tabular-nums text-zinc-500">
-                        ({trashedTasks.length})
+                        {renderCount(trashedTasks.length)}
                       </span>
                     </>
                   ),
@@ -227,17 +267,37 @@ export function TaskBoard() {
       />
 
       <div className="mt-4">
-        <DataTable
-          columns={columns}
-          data={visibleTasks}
-          getRowId={(task) => task.id}
-          initialSort={{ key: "dueDate", direction: "asc" }}
-          emptyState={
-            view === "trash"
-              ? "The recycling bin is empty."
-              : "No tasks match your current filters."
-          }
-        />
+        {status === "loading" ? (
+          <SkeletonTable />
+        ) : status === "error" ? (
+          <div
+            role="alert"
+            className="flex flex-col items-center justify-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/40 px-6 py-14 text-center"
+          >
+            <p className="text-sm font-medium text-zinc-100">
+              We couldn&apos;t load your tasks.
+            </p>
+            <p className="max-w-md text-xs leading-5 text-zinc-500">
+              {error}
+            </p>
+            <Button variant="secondary" onClick={retry}>
+              <RotateCcw aria-hidden="true" className="size-4" />
+              Try again
+            </Button>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={visibleTasks}
+            getRowId={(task) => task.id}
+            initialSort={{ key: "dueDate", direction: "asc" }}
+            emptyState={
+              view === "trash"
+                ? "The recycling bin is empty."
+                : "No tasks match your current filters."
+            }
+          />
+        )}
       </div>
 
       <TaskForm

@@ -4,23 +4,34 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { SlideOver } from "@/components/ui/slide-over";
 import { Button } from "@/components/ui/button";
-import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
-import {
-  TASK_PRIORITY_LABEL,
-  TASK_STATUS_LABEL,
-} from "@/lib/types";
+import type { Task, TaskInput, TaskPriority, TaskStatus } from "@/lib/types";
+import { TASK_PRIORITY_LABEL, TASK_STATUS_LABEL } from "@/lib/types";
 
 export interface TaskEditPanelProps {
   open: boolean;
   task: Task | null;
   onClose: () => void;
-  onSave: (task: Task) => void;
+  onSave: (input: TaskInput) => void;
 }
 
 const inputClasses =
   "h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600";
 
 const fieldLabelClasses = "mb-1.5 block text-xs font-medium text-zinc-400";
+
+function toDateInputValue(timestamp: string | null): string {
+  if (!timestamp) {
+    return "";
+  }
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export function TaskEditPanel({
   open,
@@ -33,7 +44,9 @@ export function TaskEditPanel({
   const [priority, setPriority] = useState<TaskPriority>(
     task?.priority ?? "medium"
   );
-  const [dueDate, setDueDate] = useState(task?.dueDate ?? "");
+  const [dueDate, setDueDate] = useState(
+    task?.due_date ? toDateInputValue(task.due_date) : ""
+  );
 
   if (!open || !task) {
     return null;
@@ -42,11 +55,12 @@ export function TaskEditPanel({
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSave({
-      ...task,
       title: title.trim(),
       status,
       priority,
-      dueDate,
+      due_date: dueDate
+        ? new Date(`${dueDate}T00:00:00Z`).toISOString()
+        : null,
     });
   };
 
@@ -125,7 +139,6 @@ export function TaskEditPanel({
           <span className={fieldLabelClasses}>Due date</span>
           <input
             type="date"
-            required
             value={dueDate}
             onChange={(event) => setDueDate(event.target.value)}
             className={`${inputClasses} [color-scheme:dark]`}

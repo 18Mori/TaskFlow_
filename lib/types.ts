@@ -38,11 +38,21 @@ export interface Task {
   title: string;
   status: TaskStatus;
   priority: TaskPriority;
-  /** ISO date string (YYYY-MM-DD). */
-  dueDate: string;
+  /** ISO 8601 timestamp (UTC). Null when no due date was set. */
+  due_date: string | null;
   /** When `true` the task lives in the recycling bin instead of the active list. */
-  isDeleted: boolean;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+  /** Owner of the task. Nullable until authentication is wired up. */
+  user_id: string | null;
 }
+
+/** Editable task fields, shared by the create/update forms and server actions. */
+export type TaskInput = Pick<
+  Task,
+  "title" | "status" | "priority" | "due_date"
+>;
 
 export const TASK_STATUS_ORDER: Record<TaskStatus, number> = {
   backlog: 0,
