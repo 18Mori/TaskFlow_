@@ -26,6 +26,11 @@ const invalidInputClasses =
 
 const fieldLabelClasses = "mb-1.5 block text-xs font-medium text-zinc-400";
 
+function autosize(element: HTMLTextAreaElement) {
+  element.style.height = "auto";
+  element.style.height = `${element.scrollHeight}px`;
+}
+
 function validate(title: string, dueDate: string): TaskFormErrors {
   const errors: TaskFormErrors = {};
   if (title.trim().length === 0) {
@@ -39,6 +44,7 @@ function validate(title: string, dueDate: string): TaskFormErrors {
 
 export function TaskForm({ open, onClose, onSubmit }: TaskFormProps) {
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>("backlog");
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [dueDate, setDueDate] = useState("");
@@ -57,6 +63,7 @@ export function TaskForm({ open, onClose, onSubmit }: TaskFormProps) {
     }
     onSubmit({
       title: title.trim(),
+      description: description.trim().length > 0 ? description.trim() : null,
       status,
       priority,
       due_date: new Date(`${dueDate}T00:00:00Z`).toISOString(),
@@ -107,6 +114,24 @@ export function TaskForm({ open, onClose, onSubmit }: TaskFormProps) {
               {errors.title}
             </p>
           )}
+        </label>
+
+        <label className="block">
+          <span className={fieldLabelClasses}>
+            Description
+            <span className="ml-1 font-normal text-zinc-600">(optional)</span>
+          </span>
+          <textarea
+            rows={3}
+            value={description}
+            onChange={(event) => {
+              setDescription(event.target.value);
+              autosize(event.currentTarget);
+            }}
+            onInput={(event) => autosize(event.currentTarget)}
+            placeholder="Add notes, context, or markdown…"
+            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm leading-6 text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+          />
         </label>
 
         <div className="grid grid-cols-2 gap-4">

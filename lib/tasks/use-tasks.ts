@@ -9,8 +9,11 @@ import {
   softDeleteTask as softDeleteTaskAction,
   restoreTask as restoreTaskAction,
   permanentlyDeleteTask as permanentlyDeleteTaskAction,
+  bulkUpdateTaskStatus as bulkUpdateTaskStatusAction,
+  bulkSoftDelete as bulkSoftDeleteAction,
+  bulkRestore as bulkRestoreAction,
 } from "@/lib/tasks/actions";
-import type { Task, TaskInput } from "@/lib/types";
+import type { Task, TaskInput, TaskStatus } from "@/lib/types";
 
 export type TasksQueryStatus = "loading" | "ready" | "error";
 
@@ -24,6 +27,9 @@ export interface UseTasksResult {
   softDeleteTask: (id: string) => Promise<boolean>;
   restoreTask: (id: string) => Promise<boolean>;
   permanentlyDeleteTask: (id: string) => Promise<boolean>;
+  bulkUpdateStatus: (ids: string[], status: TaskStatus) => Promise<boolean>;
+  bulkSoftDelete: (ids: string[]) => Promise<boolean>;
+  bulkRestore: (ids: string[]) => Promise<boolean>;
 }
 
 async function fetchTasks(): Promise<Task[]> {
@@ -116,6 +122,7 @@ export function useTasks(): UseTasksResult {
       const optimistic: Task = {
         id: crypto.randomUUID(),
         title: input.title,
+        description: input.description ?? null,
         status: input.status,
         priority: input.priority,
         due_date: input.due_date,
@@ -154,6 +161,7 @@ export function useTasks(): UseTasksResult {
             ? {
                 ...existing,
                 title: input.title,
+                description: input.description ?? null,
                 status: input.status,
                 priority: input.priority,
                 due_date: input.due_date,
@@ -236,6 +244,71 @@ export function useTasks(): UseTasksResult {
     [rollback]
   );
 
+  const bulkUpdateStatus = useCallback(
+    async (ids: string[], status: TaskStatus): Promise<boolean> => {
+      const idSet = new Set(ids);
+      setTasks((current) =>
+        current.map((task) =>
+          idSet.has(task.id)
+            ? { ...task, status, updated_at: new Date().toISOString() }
+            : task
+        )
+      );
+
+      try {
+        await bulkUpdateTaskStatusAction(ids, status);
+        return true;
+      } catch {
+        await rollback();
+        toast.error("Failed to update tasks. Connection lost.");
+        return false;
+      }
+    },
+    [rollback]
+  );
+
+  const bulkSoftDelete = useCallback(
+    async (ids: string[]): Promise<boolean> => {
+      const idSet = new Set(ids);
+      setTasks((current) =>
+        current.map((task) =>
+          idSet.has(task.id) ? { ...task, is_deleted: true } : task
+        )
+      );
+
+      try {
+        await bulkSoftDeleteAction(ids);
+        return true;
+      } catch {
+        await rollback();
+        toast.error("Failed to delete tasks. Connection lost.");
+        return false;
+      }
+    },
+    [rollback]
+  );
+
+  const bulkRestore = useCallback(
+    async (ids: string[]): Promise<boolean> => {
+      const idSet = new Set(ids);
+      setTasks((current) =>
+        current.map((task) =>
+          idSet.has(task.id) ? { ...task, is_deleted: false } : task
+        )
+      );
+
+      try {
+        await bulkRestoreAction(ids);
+        return true;
+      } catch {
+        await rollback();
+        toast.error("Failed to restore tasks. Connection lost.");
+        return false;
+      }
+    },
+    [rollback]
+  );
+
   return {
     tasks,
     status,
@@ -246,5 +319,8 @@ export function useTasks(): UseTasksResult {
     softDeleteTask,
     restoreTask,
     permanentlyDeleteTask,
+    bulkUpdateStatus,
+    bulkSoftDelete,
+    bulkRestore,
   };
 }

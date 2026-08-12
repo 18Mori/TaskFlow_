@@ -10,6 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { Column, SortState } from "@/lib/types";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export interface DataTableProps<T> {
   columns: readonly Column<T>[];
@@ -19,6 +20,12 @@ export interface DataTableProps<T> {
   initialPageSize?: number;
   pageSizeOptions?: readonly number[];
   emptyState?: ReactNode;
+  /** When `true`, renders a checkbox column and keeps selection UI. */
+  selectable?: boolean;
+  /** Controlled row ids currently selected. */
+  selectedRowIds?: ReadonlySet<string>;
+  /** Called whenever the selected set changes. */
+  onSelectionChange?: (selected: Set<string>) => void;
 }
 
 function getSortValue<T>(column: Column<T>, row: T): string | number {
@@ -70,6 +77,9 @@ export function DataTable<T>({
   initialPageSize = 10,
   pageSizeOptions = [5, 10, 25],
   emptyState = "No rows to display.",
+  selectable = false,
+  selectedRowIds = new Set<string>(),
+  onSelectionChange,
 }: DataTableProps<T>) {
   const [sort, setSort] = useState<SortState | null>(initialSort ?? null);
   const [page, setPage] = useState(1);
@@ -97,13 +107,48 @@ export function DataTable<T>({
   const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
   const safePage = Math.min(page, totalPages);
   const pageRows = useMemo(
-    () =>
-      sortedData.slice((safePage - 1) * pageSize, safePage * pageSize),
+    () => sortedData.slice((safePage - 1) * pageSize, safePage * pageSize),
     [sortedData, safePage, pageSize]
   );
 
   const from = sortedData.length === 0 ? 0 : (safePage - 1) * pageSize + 1;
   const to = Math.min(safePage * pageSize, sortedData.length);
+
+  const toggleSelection = (id: string) => {
+    if (!onSelectionChange) {
+      return;
+    }
+    const next = new Set(selectedRowIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    onSelectionChange(next);
+  };
+
+  const selection = (() => {
+    if (!selectable || !onSelectionChange) {
+      return null;
+    }
+    const pageIds = pageRows.map(getRowId);
+    const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedRowIds.has(id));
+    const someSelected = pageIds.some((id) => selectedRowIds.has(id));
+
+    const togglePage = () => {
+      const next = new Set(selectedRowIds);
+      if (allSelected) {
+        pageIds.forEach((id) => next.delete(id));
+      } else {
+        pageIds.forEach((id) => next.add(id));
+      }
+      onSelectionChange(next);
+    };
+
+    return { allSelected, someSelected, togglePage };
+  })();
+
+  const totalColumns = columns.length + (selection ? 1 : 0);
 
   function toggleSort(columnId: string) {
     setSort((current) => {
@@ -128,6 +173,22 @@ export function DataTable<T>({
         <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-800">
+              {selection && (
+                <th scope="col" className="h-10 w-10 px-4 pr-0">
+                  <div className="flex items-center">
+                    <Checkbox
+                      checked={selection.allSelected}
+                      indeterminate={selection.someSelected && !selection.allSelected}
+                      onChange={selection.togglePage}
+                      label={
+                        selection.allSelected
+                          ? "Clear selection"
+                          : "Select all tasks on this page"
+                      }
+                    />
+                  </div>
+                </th>
+              )}
               {columns.map((column) => {
                 const isActive = sort?.key === column.id;
                 const ariaSort = isActive
@@ -173,25 +234,47 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody>
-            {pageRows.map((row) => (
-              <tr
-                key={getRowId(row)}
-                className="group border-b border-zinc-800/60 transition-colors duration-150 last:border-b-0 hover:bg-zinc-800/30"
-              >
-                {columns.map((column) => (
-                  <td
-                    key={column.id}
-                    className={`px-4 py-3 align-middle ${column.className ?? ""}`}
-                  >
-                    {column.cell ? column.cell(row) : getSortValue(column, row)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {pageRows.map((row) => {
+              const id = getRowId(row);
+              const selected = selectedRowIds.has(id);
+              return (
+                <tr
+                  key={id}
+                  onClick={
+                    selection ? () => toggleSelection(id) : undefined
+                  }
+                  className={`group border-b border-zinc-800/60 transition-colors duration-150 last:border-b-0 ${
+                    selected
+                      ? "bg-zinc-800/40 hover:bg-zinc-800/50"
+                      : "hover:bg-zinc-800/30"
+                  } ${selection ? "cursor-pointer" : ""}`}
+                >
+                  {selection && (
+                    <td className="px-4 py-3 pr-0 align-middle">
+                      <div className="flex items-center">
+                        <Checkbox
+                          checked={selected}
+                          onChange={() => toggleSelection(id)}
+                          label={`Select row ${id}`}
+                        />
+                      </div>
+                    </td>
+                  )}
+                  {columns.map((column) => (
+                    <td
+                      key={column.id}
+                      className={`px-4 py-3 align-middle ${column.className ?? ""}`}
+                    >
+                      {column.cell ? column.cell(row) : getSortValue(column, row)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
             {pageRows.length === 0 && (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={totalColumns}
                   className="h-32 px-4 text-center text-sm text-zinc-500"
                 >
                   {emptyState}
@@ -203,10 +286,7 @@ export function DataTable<T>({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 px-4 py-3">
-        <p
-          role="status"
-          className="text-xs tabular-nums text-zinc-500"
-        >
+        <p role="status" className="text-xs tabular-nums text-zinc-500">
           Showing {from}–{to} of {sortedData.length}
         </p>
 

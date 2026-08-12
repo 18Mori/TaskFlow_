@@ -56,14 +56,21 @@ function isPastDue(task: Task): boolean {
 
 function TaskTitle({ task }: { task: Task }) {
   return (
-    <span
-      className={`block max-w-md truncate ${
-        task.status === "completed"
-          ? "text-zinc-500 line-through"
-          : "text-zinc-200"
-      }`}
-    >
-      {task.title}
+    <span className="block max-w-md min-w-0">
+      <span
+        className={`block truncate ${
+          task.status === "completed"
+            ? "text-zinc-500 line-through"
+            : "text-zinc-200"
+        }`}
+      >
+        {task.title}
+      </span>
+      {task.description && (
+        <span className="mt-0.5 block truncate text-xs text-zinc-500">
+          {task.description}
+        </span>
+      )}
     </span>
   );
 }

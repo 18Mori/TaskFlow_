@@ -12,6 +12,8 @@
   --animate-fade-in-slow: fade-in 200ms ease-out both;
   --animate-slide-in-right: slide-in-right 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-slide-up: slide-up 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-rise: rise 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-pulse-glow: pulse-glow 4s ease-in-out infinite;
 
   @keyframes fade-in {
     from {
@@ -41,10 +43,74 @@
       transform: translateY(0) scale(1);
     }
   }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
 }
 
 body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   background: #09090b;
   color: #f4f4f5;
+}
+
+/* Subtle engineering grid used across the landing/auth pages. */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+/* CTA sheen — a diagonal light sweep that animates on hover. */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.btn-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 80%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-shimmer:hover::after {
+  transform: translateX(120%);
+}
+
+/* Ambient glow used behind hero copy. */
+.hero-glow {
+  background:
+    radial-gradient(60% 55% at 50% 0%, rgba(217, 119, 6, 0.12), transparent 70%),
+    radial-gradient(50% 45% at 80% 8%, rgba(245, 158, 11, 0.05), transparent 70%);
+  filter: blur(24px);
 }

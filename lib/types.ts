@@ -36,6 +36,8 @@ export type TaskPriority = "low" | "medium" | "high";
 export interface Task {
   id: string;
   title: string;
+  /** Optional detailed notes / markdown. */
+  description: string | null;
   status: TaskStatus;
   priority: TaskPriority;
   /** ISO 8601 timestamp (UTC). Null when no due date was set. */
@@ -44,14 +46,14 @@ export interface Task {
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
-  /** Owner of the task. Nullable until authentication is wired up. */
+  /** Owner of the task. Applied via `auth.uid()` at insert time. */
   user_id: string | null;
 }
 
 /** Editable task fields, shared by the create/update forms and server actions. */
 export type TaskInput = Pick<
   Task,
-  "title" | "status" | "priority" | "due_date"
+  "title" | "description" | "status" | "priority" | "due_date"
 >;
 
 export const TASK_STATUS_ORDER: Record<TaskStatus, number> = {
