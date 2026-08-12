@@ -32,7 +32,17 @@ comment on column public.tasks.user_id is
   'Owner of the task. Nullable while single-user/testing; enforced by RLS for authenticated users.';
 
 -- ------------------------------------------------------------
--- 2. Automatic `updated_at` trigger
+-- 2. Permissions — expose the table to PostgREST.
+--    PostgREST builds its "schema cache" from what each role can
+--    access. Without these GRANTs the table is invisible to the
+--    client and writes fail with:
+--      "Could not find the table 'public.tasks' in the schema cache".
+-- ------------------------------------------------------------
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.tasks to anon, authenticated;
+
+-- ------------------------------------------------------------
+-- 3. Automatic `updated_at` trigger
 -- ------------------------------------------------------------
 create or replace function public.handle_updated_at()
 returns trigger
@@ -51,65 +61,75 @@ create trigger tasks_set_updated_at
   execute function public.handle_updated_at();
 
 -- ------------------------------------------------------------
--- 3. Row Level Security
+-- 4. Row Level Security
 -- ------------------------------------------------------------
 alter table public.tasks enable row level security;
 
 -- Authenticated policies: users only touch their own tasks.
 -- Wire `user_id` to `auth.uid()` at insert time once authentication is enabled.
+-- `DROP POLICY IF EXISTS` makes the migration safe to re-run (PostgreSQL
+-- does not support `CREATE POLICY IF NOT EXISTS`).
 
+drop policy if exists "Users can view their own tasks" on public.tasks;
 create policy "Users can view their own tasks"
   on public.tasks for select
   to authenticated
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can create their own tasks" on public.tasks;
 create policy "Users can create their own tasks"
   on public.tasks for insert
   to authenticated
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update their own tasks" on public.tasks;
 create policy "Users can update their own tasks"
   on public.tasks for update
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can delete their own tasks" on public.tasks;
 create policy "Users can delete their own tasks"
   on public.tasks for delete
   to authenticated
   using (auth.uid() = user_id);
 
 -- ------------------------------------------------------------
--- 4. Fallback public/anon policies (for local development &
+-- 5. Fallback public/anon policies (for local development &
 --    testing before authentication is wired up).
 --    COMMENT OUT these four policies in production: they grant
 --    full read/write access to anyone using the anon key.
 --    The RLS-protected policies above still apply once a user
 --    is signed in and `user_id` is populated.
 -- ------------------------------------------------------------
+drop policy if exists "Public read access for testing" on public.tasks;
 create policy "Public read access for testing"
   on public.tasks for select
   to anon
   using (true);
 
+drop policy if exists "Public insert access for testing" on public.tasks;
 create policy "Public insert access for testing"
   on public.tasks for insert
   to anon
   with check (true);
 
+drop policy if exists "Public update access for testing" on public.tasks;
 create policy "Public update access for testing"
   on public.tasks for update
   to anon
   using (true)
   with check (true);
 
+drop policy if exists "Public delete access for testing" on public.tasks;
 create policy "Public delete access for testing"
   on public.tasks for delete
   to anon
   using (true);
 
 -- ------------------------------------------------------------
--- 5. Optional seeding guard — disabled by default.
+-- 6. Optional seeding guard — disabled by default.
 --    Uncomment to seed a couple of rows for a blank workspace
 --    during development.
 -- ------------------------------------------------------------
