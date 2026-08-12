@@ -125,7 +125,7 @@ export function DropdownMenu({
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={label}
-        className={`inline-flex items-center justify-center rounded-md p-1.5 text-zinc-500 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 ${triggerClassName}`}
+        className={`inline-flex touch-manipulation items-center justify-center rounded-md p-2 text-zinc-500 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 active:bg-zinc-800 active:text-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 sm:p-1.5 ${triggerClassName}`}
       >
         {children}
       </button>
@@ -151,10 +151,10 @@ export function DropdownMenu({
                 }
                 aria-checked={item.checked}
                 onClick={() => handleSelect(item)}
-                className={`flex w-full items-center gap-2 rounded-sm px-2.5 py-1.5 text-left text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500 ${
+                className={`flex w-full touch-manipulation items-center gap-2 rounded-sm px-2.5 py-2.5 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500 sm:py-1.5 ${
                   item.destructive
-                    ? "text-rose-400 hover:bg-rose-500/10"
-                    : "text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                    ? "text-rose-400 hover:bg-rose-500/10 active:bg-rose-500/20"
+                    : "text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 active:bg-zinc-800 active:text-zinc-50"
                 }`}
               >
                 {item.icon && (

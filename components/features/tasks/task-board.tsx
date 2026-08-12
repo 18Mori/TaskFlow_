@@ -34,8 +34,6 @@ export function TaskBoard() {
     retry,
     createTask,
     updateTask,
-    softDeleteTask,
-    restoreTask,
     permanentlyDeleteTask,
     bulkUpdateStatus,
     bulkSoftDelete,
@@ -104,27 +102,6 @@ export function TaskBoard() {
   // ------------------------------------------------------------
   // Single-row handlers
   // ------------------------------------------------------------
-  const handleMoveToTrash = useCallback(
-    (task: Task) => {
-      void softDeleteTask(task.id);
-      toast.success("Task moved to recycling bin.", {
-        action: {
-          label: "Undo",
-          onSelect: () => void restoreTask(task.id),
-        },
-      });
-    },
-    [softDeleteTask, restoreTask]
-  );
-
-  const handleRestore = useCallback(
-    (task: Task) => {
-      void restoreTask(task.id);
-      toast.success("Task restored to active list.");
-    },
-    [restoreTask]
-  );
-
   const handleCreate = useCallback(
     async (input: TaskInput) => {
       if (await createTask(input)) {
@@ -181,13 +158,20 @@ export function TaskBoard() {
     if (ids.length === 0) {
       return;
     }
+    const previousIds = new Set(ids);
     if (await bulkSoftDelete(ids)) {
       toast.success(
-        `${ids.length} ${ids.length === 1 ? "task" : "tasks"} moved to recycling bin.`
+        `${ids.length} ${ids.length === 1 ? "task" : "tasks"} moved to recycling bin.`,
+        {
+          action: {
+            label: "Undo",
+            onSelect: () => void bulkRestore([...previousIds]),
+          },
+        }
       );
     }
     clearSelection();
-  }, [selectedIds, bulkSoftDelete, clearSelection]);
+  }, [selectedIds, bulkSoftDelete, bulkRestore, clearSelection]);
 
   const handleBatchRestore = useCallback(async () => {
     const ids = [...selectedIds];
@@ -321,13 +305,11 @@ export function TaskBoard() {
       createTaskColumns(
         {
           onEdit: setEditingTask,
-          onMoveToTrash: handleMoveToTrash,
-          onRestore: handleRestore,
           onDeletePermanently: setDeletingTask,
         },
         view
       ),
-    [view, handleMoveToTrash, handleRestore]
+    [view]
   );
 
   const renderSummary = () => {
@@ -349,11 +331,11 @@ export function TaskBoard() {
   } selected`;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-12">
-      <div className="mb-10 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <AppLogo size={24} className="text-zinc-200" />
-          <span className="text-base font-semibold tracking-tight text-zinc-100">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mb-6 flex items-center justify-between sm:mb-10">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <AppLogo size={24} className="shrink-0 text-zinc-200" />
+          <span className="truncate text-base font-semibold tracking-tight text-zinc-100">
             Taskflow
           </span>
         </div>
@@ -364,18 +346,20 @@ export function TaskBoard() {
       </div>
 
       <header className="mb-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-500">
+            <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-zinc-500 sm:text-xs">
               Workspace
             </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-100">
+            <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-zinc-100 sm:mt-2 sm:text-2xl md:text-3xl">
               Tasks
             </h1>
-            <p className="mt-1 text-sm text-zinc-500">{renderSummary()}</p>
+            <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
+              {renderSummary()}
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <SegmentedControl<ViewMode>
               ariaLabel="Task list view"
               value={view}
@@ -405,7 +389,11 @@ export function TaskBoard() {
                 },
               ]}
             />
-            <Button variant="primary" onClick={() => setFormOpen(true)}>
+            <Button
+              variant="primary"
+              className="w-full sm:w-auto"
+              onClick={() => setFormOpen(true)}
+            >
               <Plus aria-hidden="true" className="size-4" />
               New task
               <Kbd>N</Kbd>
@@ -482,10 +470,13 @@ export function TaskBoard() {
               }
             />
             {selectedTasks.length > 0 && (
-              <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
-                <div className="pointer-events-auto flex animate-slide-up flex-wrap items-center gap-2 rounded-xl border border-zinc-700/70 bg-zinc-950/85 px-3.5 py-3 shadow-2xl shadow-black/50 backdrop-blur-md">
-                  <span className="flex items-center gap-2 px-1.5 text-sm font-medium text-zinc-200">
-                    <CheckSquare aria-hidden="true" className="size-4 text-zinc-500" />
+              <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 sm:bottom-6">
+                <div className="pointer-events-auto flex w-full max-w-md animate-slide-up flex-wrap items-center justify-center gap-2 rounded-xl border border-zinc-700/70 bg-zinc-950/85 px-3.5 py-3 shadow-2xl shadow-black/50 backdrop-blur-md sm:w-auto">
+                  <span className="flex items-center gap-2 px-1.5 text-xs font-medium text-zinc-200 sm:text-sm">
+                    <CheckSquare
+                      aria-hidden="true"
+                      className="size-4 shrink-0 text-zinc-500"
+                    />
                     {selectedLabel}
                   </span>
                   <div className="mx-1 hidden h-5 w-px bg-zinc-800 sm:block" />

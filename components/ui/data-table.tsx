@@ -171,7 +171,7 @@ export function DataTable<T>({
     <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/40">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm">
-          <thead>
+          <thead className="hidden md:table-header-group">
             <tr className="border-b border-zinc-800">
               {selection && (
                 <th scope="col" className="h-10 w-10 px-4 pr-0">
@@ -209,7 +209,7 @@ export function DataTable<T>({
                         type="button"
                         onClick={() => toggleSort(column.id)}
                         aria-label={`Sort by ${column.header}`}
-                        className={`inline-flex h-full items-center gap-1 transition-colors duration-150 hover:text-zinc-200 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 ${isActive ? "text-zinc-200" : ""}`}
+                        className={`inline-flex h-full items-center gap-1 transition-colors duration-150 hover:text-zinc-200 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 active:text-zinc-100 ${isActive ? "text-zinc-200" : ""}`}
                       >
                         {column.header}
                         {isActive ? (
@@ -243,27 +243,27 @@ export function DataTable<T>({
                   onClick={
                     selection ? () => toggleSelection(id) : undefined
                   }
-                  className={`group border-b border-zinc-800/60 transition-colors duration-150 last:border-b-0 ${
+                  className={`flex flex-wrap items-center gap-x-3 gap-y-1.5 md:table-row group border-b border-zinc-800/60 transition-colors duration-200 last:border-b-0 ${
                     selected
                       ? "bg-zinc-800/40 hover:bg-zinc-800/50"
-                      : "hover:bg-zinc-800/30"
+                      : "hover:bg-zinc-800/30 active:bg-zinc-800/40"
                   } ${selection ? "cursor-pointer" : ""}`}
                 >
                   {selection && (
-                    <td className="px-4 py-3 pr-0 align-middle">
-                      <div className="flex items-center">
-                        <Checkbox
-                          checked={selected}
-                          onChange={() => toggleSelection(id)}
-                          label={`Select row ${id}`}
-                        />
-                      </div>
+                    <td className="max-md:self-start px-4 py-3 pr-0 align-middle">
+                      <Checkbox
+                        checked={selected}
+                        onChange={() => toggleSelection(id)}
+                        label={`Select row ${id}`}
+                      />
                     </td>
                   )}
                   {columns.map((column) => (
                     <td
                       key={column.id}
-                      className={`px-4 py-3 align-middle ${column.className ?? ""}`}
+                      className={`px-4 py-3 align-middle ${
+                        column.hiddenOnMobile ? "hidden md:table-cell" : ""
+                      } ${column.className ?? ""} ${column.mobileClassName ?? ""}`}
                     >
                       {column.cell ? column.cell(row) : getSortValue(column, row)}
                     </td>
@@ -272,10 +272,10 @@ export function DataTable<T>({
               );
             })}
             {pageRows.length === 0 && (
-              <tr>
+              <tr className="flex h-32 items-center justify-center md:table-row">
                 <td
                   colSpan={totalColumns}
-                  className="h-32 px-4 text-center text-sm text-zinc-500"
+                  className="px-4 text-center text-sm text-zinc-500 md:table-cell"
                 >
                   {emptyState}
                 </td>
@@ -285,18 +285,18 @@ export function DataTable<T>({
         </table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 px-4 py-3">
+      <div className="flex flex-col gap-3 border-t border-zinc-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p role="status" className="text-xs tabular-nums text-zinc-500">
           Showing {from}–{to} of {sortedData.length}
         </p>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-4">
           <label className="flex items-center gap-2 text-xs text-zinc-500">
-            <span>Rows per page</span>
+            <span className="hidden sm:inline">Rows per page</span>
             <select
               value={pageSize}
               onChange={(event) => changePageSize(Number(event.target.value))}
-              className="h-7 rounded-md border border-zinc-800 bg-zinc-900 px-2 text-xs text-zinc-300 focus:border-zinc-600 focus:outline-none"
+              className="h-10 rounded-md border border-zinc-800 bg-zinc-900 px-2 text-xs text-zinc-300 transition-colors duration-150 focus:border-zinc-600 focus:outline-none active:border-zinc-700 sm:h-8"
             >
               {pageSizeOptions.map((option) => (
                 <option key={option} value={option}>
@@ -312,7 +312,7 @@ export function DataTable<T>({
               onClick={() => setPage(Math.max(1, safePage - 1))}
               disabled={safePage <= 1}
               aria-label="Previous page"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-400 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 disabled:pointer-events-none disabled:opacity-40"
+              className="flex h-10 w-10 touch-manipulation items-center justify-center rounded-md text-zinc-400 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 active:bg-zinc-700 active:text-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 disabled:pointer-events-none disabled:opacity-40 sm:h-7 sm:w-7"
             >
               <ChevronLeft aria-hidden="true" className="size-4" />
             </button>
@@ -333,10 +333,10 @@ export function DataTable<T>({
                   onClick={() => setPage(item)}
                   aria-current={item === safePage ? "page" : undefined}
                   aria-label={`Page ${item}`}
-                  className={`h-7 min-w-7 rounded-md px-1.5 text-xs tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 ${
+                  className={`flex h-10 min-w-10 touch-manipulation items-center justify-center rounded-md px-1.5 text-xs tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 sm:h-7 sm:min-w-7 ${
                     item === safePage
                       ? "bg-zinc-700 text-zinc-100"
-                      : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 active:bg-zinc-700 active:text-zinc-50"
                   }`}
                 >
                   {item}
@@ -349,7 +349,7 @@ export function DataTable<T>({
               onClick={() => setPage(Math.min(totalPages, safePage + 1))}
               disabled={safePage >= totalPages}
               aria-label="Next page"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-400 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 disabled:pointer-events-none disabled:opacity-40"
+              className="flex h-10 w-10 touch-manipulation items-center justify-center rounded-md text-zinc-400 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 active:bg-zinc-700 active:text-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 disabled:pointer-events-none disabled:opacity-40 sm:h-7 sm:w-7"
             >
               <ChevronRight aria-hidden="true" className="size-4" />
             </button>

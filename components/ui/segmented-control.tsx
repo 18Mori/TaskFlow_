@@ -24,7 +24,7 @@ export function SegmentedControl<T extends string>({
     <div
       role="group"
       aria-label={ariaLabel}
-      className="inline-flex items-center gap-0.5 rounded-lg border border-zinc-800 bg-zinc-900 p-0.5"
+      className="inline-flex w-full items-center gap-0.5 rounded-lg border border-zinc-800 bg-zinc-900 p-0.5 sm:w-auto"
     >
       {options.map((option) => {
         const selected = option.value === value;
@@ -34,10 +34,10 @@ export function SegmentedControl<T extends string>({
             type="button"
             aria-pressed={selected}
             onClick={() => onChange(option.value)}
-            className={`h-7 rounded-md px-3 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 ${
+            className={`h-9 flex-1 touch-manipulation rounded-md px-2 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 sm:h-7 sm:flex-none sm:px-3 ${
               selected
                 ? "bg-zinc-700 text-zinc-100"
-                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
+                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 active:bg-zinc-800 active:text-zinc-50"
             }`}
           >
             {option.label}

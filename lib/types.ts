@@ -27,6 +27,16 @@ export interface Column<T> {
   className?: string;
   /** Extra classes applied to the `<th>` for this column. */
   headerClassName?: string;
+  /**
+   * When `true` the column is hidden below the `md` breakpoint (used to
+   * declutter task tables on mobile e.g. low-priority metadata columns).
+   */
+  hiddenOnMobile?: boolean;
+  /**
+   * Extra classes applied to the `<td>` below the `md` breakpoint.
+   * Enables the card-list transformation (flex order/basis) on small screens.
+   */
+  mobileClassName?: string;
 }
 
 export type TaskStatus = "backlog" | "in-progress" | "completed";

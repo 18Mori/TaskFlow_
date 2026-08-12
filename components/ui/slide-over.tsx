@@ -44,7 +44,7 @@ export function SlideOver({
         aria-describedby={description ? "slide-over-description" : undefined}
         className="absolute inset-y-0 right-0 flex w-full max-w-md animate-slide-in-right flex-col border-l border-zinc-800 bg-zinc-950"
       >
-        <header className="flex items-start justify-between gap-4 border-b border-zinc-800 px-6 py-5">
+        <header className="flex items-start justify-between gap-4 border-b border-zinc-800 px-5 py-5 sm:px-6">
           <div className="min-w-0">
             <h2
               id="slide-over-title"
@@ -65,16 +65,16 @@ export function SlideOver({
             type="button"
             onClick={onClose}
             aria-label="Close panel"
-            className="rounded-md p-1.5 text-zinc-500 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+            className="-m-1.5 shrink-0 rounded-md p-3.5 text-zinc-500 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 active:bg-zinc-800 active:text-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 sm:p-1.5"
           >
             <X aria-hidden="true" className="size-4" />
           </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
 
         {footer && (
-          <footer className="flex justify-end gap-2 border-t border-zinc-800 px-6 py-4">
+          <footer className="flex justify-end gap-2 border-t border-zinc-800 px-5 py-4 sm:px-6">
             {footer}
           </footer>
         )}

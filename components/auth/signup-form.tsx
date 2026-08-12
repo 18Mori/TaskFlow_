@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 const inputClasses =
-  "h-9 w-full rounded-md border border-zinc-800 bg-zinc-900/70 px-3 text-sm text-zinc-200 transition-colors duration-150 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/40";
+  "h-10 w-full rounded-md border border-zinc-800 bg-zinc-900/70 px-3 text-sm text-zinc-200 transition-colors duration-150 placeholder:text-zinc-600 hover:border-zinc-700 focus:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-600/40 sm:h-9";
 
 const invalidInputClasses =
-  "h-9 w-full rounded-md border border-rose-500/50 bg-zinc-900/70 px-3 text-sm text-zinc-200 transition-colors duration-150 placeholder:text-zinc-600 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/30";
+  "h-10 w-full rounded-md border border-rose-500/50 bg-zinc-900/70 px-3 text-sm text-zinc-200 transition-colors duration-150 placeholder:text-zinc-600 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/30 sm:h-9";
 
 const labelClasses = "mb-1.5 block text-xs font-medium text-zinc-400";
 

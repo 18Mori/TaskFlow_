@@ -8,10 +8,10 @@
 }
 
 @theme {
-  --animate-fade-in: fade-in 150ms ease-out both;
-  --animate-fade-in-slow: fade-in 200ms ease-out both;
-  --animate-slide-in-right: slide-in-right 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-slide-up: slide-up 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 180ms ease-out both;
+  --animate-fade-in-slow: fade-in 240ms ease-out both;
+  --animate-slide-in-right: slide-in-right 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-up: slide-up 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-rise: rise 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-pulse-glow: pulse-glow 4s ease-in-out infinite;
 
@@ -70,6 +70,25 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   background: #09090b;
   color: #f4f4f5;
+}
+
+/*
+ * Mobile-first polish:
+ * - `-webkit-text-size-adjust` stops iOS auto-inflating text when a landscape
+ *   orientation change or first tap fires.
+ * - `-webkit-tap-highlight-color: transparent` removes the grey tap flash on
+ *   Android Chrome / legacy iOS so active-state styles own the feedback.
+ * - `overscroll-behavior-y: none` keeps pull-to-refresh/bounce from hijacking
+ *   the task board inside the app viewport.
+ */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overscroll-behavior-y: none;
 }
 
 /* Subtle engineering grid used across the landing/auth pages. */

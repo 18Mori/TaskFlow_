@@ -15,7 +15,7 @@ export interface TaskEditPanelProps {
 }
 
 const inputClasses =
-  "h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600";
+  "h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600 sm:h-9";
 
 const fieldLabelClasses = "mb-1.5 block text-xs font-medium text-zinc-400";
 

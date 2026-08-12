@@ -20,7 +20,7 @@ export interface FilterBarProps {
 }
 
 const pillTriggerClasses =
-  "h-9 gap-1.5 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-xs font-medium text-zinc-300 transition-colors duration-150 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100";
+  "h-10 flex-1 touch-manipulation gap-1.5 rounded-md border border-zinc-800 bg-zinc-900 px-3 text-xs font-medium text-zinc-300 transition-colors duration-150 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 active:border-zinc-600 active:bg-zinc-800 active:text-zinc-50 sm:h-9 sm:flex-none";
 
 function joinLabels(
   selected: ReadonlySet<string>,
@@ -99,7 +99,7 @@ export function FilterBar({
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Search tasks…"
           aria-label="Search tasks"
-          className="h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 pr-3 pl-9 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600 [&::-webkit-search-cancel-button]:hidden"
+          className="h-10 w-full touch-manipulation rounded-md border border-zinc-800 bg-zinc-900 pr-3 pl-9 text-sm text-zinc-200 placeholder:text-zinc-600 transition-colors duration-150 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600 sm:h-9 [&::-webkit-search-cancel-button]:hidden"
         />
       </div>
 
@@ -127,7 +127,7 @@ export function FilterBar({
         <button
           type="button"
           onClick={onClearAll}
-          className="inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-zinc-500 transition-colors duration-150 hover:bg-zinc-800/60 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+          className="inline-flex h-10 touch-manipulation flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-zinc-500 transition-colors duration-150 hover:bg-zinc-800/60 hover:text-zinc-200 active:bg-zinc-800 active:text-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 sm:h-9 sm:flex-none"
         >
           <X aria-hidden="true" className="size-3.5" />
           Clear

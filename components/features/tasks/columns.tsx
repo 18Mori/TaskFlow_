@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { Column, Task } from "@/lib/types";
 import {
   TASK_PRIORITY_LABEL,
@@ -15,8 +15,6 @@ export type TaskTableMode = "active" | "trash";
 
 export interface TaskColumnHandlers {
   onEdit: (task: Task) => void;
-  onMoveToTrash: (task: Task) => void;
-  onRestore: (task: Task) => void;
   onDeletePermanently: (task: Task) => void;
 }
 
@@ -56,18 +54,18 @@ function isPastDue(task: Task): boolean {
 
 function TaskTitle({ task }: { task: Task }) {
   return (
-    <span className="block max-w-md min-w-0">
+    <span className="block min-w-0">
       <span
-        className={`block truncate ${
+        className={`block min-w-0 max-w-md break-words text-zinc-200 line-clamp-2 ${
           task.status === "completed"
-            ? "text-zinc-500 line-through"
-            : "text-zinc-200"
+            ? "line-through decoration-zinc-600 text-zinc-500"
+            : ""
         }`}
       >
         {task.title}
       </span>
       {task.description && (
-        <span className="mt-0.5 block truncate text-xs text-zinc-500">
+        <span className="mt-0.5 block min-w-0 max-w-md break-words text-xs leading-5 text-zinc-500 line-clamp-2">
           {task.description}
         </span>
       )}
@@ -92,7 +90,7 @@ function TaskDueDate({ task }: { task: Task }) {
 }
 
 export function createTaskColumns(
-  { onEdit, onMoveToTrash, onRestore, onDeletePermanently }: TaskColumnHandlers,
+  { onEdit, onDeletePermanently }: TaskColumnHandlers,
   mode: TaskTableMode
 ): Column<Task>[] {
   return [
@@ -101,6 +99,7 @@ export function createTaskColumns(
       header: "Task",
       accessor: (row) => row.title,
       sortable: true,
+      mobileClassName: "max-md:order-1 max-md:min-w-0 max-md:flex-1",
       cell: (task) => <TaskTitle task={task} />,
     },
     {
@@ -108,6 +107,7 @@ export function createTaskColumns(
       header: "Status",
       accessor: (row) => TASK_STATUS_ORDER[row.status],
       sortable: true,
+      mobileClassName: "max-md:order-3 max-md:basis-full",
       cell: (task) => (
         <Badge tone={STATUS_TONES[task.status]} dot>
           {TASK_STATUS_LABEL[task.status]}
@@ -119,6 +119,7 @@ export function createTaskColumns(
       header: "Priority",
       accessor: (row) => TASK_PRIORITY_ORDER[row.priority],
       sortable: true,
+      hiddenOnMobile: true,
       cell: (task) => (
         <Badge tone={PRIORITY_TONES[task.priority]}>
           {TASK_PRIORITY_LABEL[task.priority]}
@@ -130,13 +131,15 @@ export function createTaskColumns(
       header: "Due date",
       accessor: (row) => row.due_date ?? "",
       sortable: true,
+      hiddenOnMobile: true,
       cell: (task) => <TaskDueDate task={task} />,
     },
     {
       id: "actions",
       header: "",
       sortable: false,
-      className: "w-10",
+      className: "md:w-10",
+      mobileClassName: "max-md:order-2 max-md:ml-auto max-md:shrink-0",
       cell: (task) => {
         const actions =
           mode === "active"
@@ -147,21 +150,8 @@ export function createTaskColumns(
                   icon: <Pencil className="size-4" />,
                   onSelect: () => onEdit(task),
                 },
-                {
-                  id: "trash",
-                  label: "Delete",
-                  icon: <Trash2 className="size-4" />,
-                  onSelect: () => onMoveToTrash(task),
-                  destructive: true,
-                },
               ]
             : [
-                {
-                  id: "restore",
-                  label: "Restore",
-                  icon: <RotateCcw className="size-4" />,
-                  onSelect: () => onRestore(task),
-                },
                 {
                   id: "delete-permanent",
                   label: "Delete permanently",
